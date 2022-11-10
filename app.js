@@ -1,7 +1,7 @@
 const { log } = require('console')
 const fs = require('fs')
 const qrcode = require('qrcode-terminal')
-const { Client } = require('whatsapp-web.js')
+const { Client, LocalAuth } = require('whatsapp-web.js')
 const { MessageMedia } = require('whatsapp-web.js')
 // const Util = require('whatsapp-web.js/src/util/Util')
 const colors = require('colors')
@@ -17,21 +17,12 @@ const path = require('path')
 ***************************
 */
 
-// Path where the session data will be stored
-const SESSION_FILE_PATH = './session.json'
-
-// Load the session data if it has been previously saved
-let sessionData
-if (fs.existsSync(SESSION_FILE_PATH)) {
-	sessionData = require(SESSION_FILE_PATH)
-}
-
-// Use the saved values
 const client = new Client({
-	session: sessionData,
+	authStrategy: new LocalAuth(),
 	puppeteer: {
 		executablePath:
-			'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+		'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+			// 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
 	},
 	// takeoverOnConflict: false,
 	// ffmpegPath: 'D:\\Program Files\\ffmpeg-N-100892-g44e27d937d-win64-gpl-shared\\ffmpeg-N-100892-g44e27d937d-win64-gpl-shared\\bin',
@@ -44,12 +35,7 @@ client.on('qr', qr => {
 
 // Save session values to the file upon successful auth
 client.on('authenticated', session => {
-	sessionData = session
-	fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function (err) {
-		if (err) {
-			console.error(err.message.red)
-		}
-	})
+	console.log(`${t} Authed!`.blue)
 })
 
 client.on('auth_failure', msg => {
@@ -79,7 +65,6 @@ let EVERYONE = '!everyone'
 let JADWAL = '!jadwal'
 let STICKER = '!sticker'
 let S = '!s'
-let RANDOM = '!random'
 let RANDOM_AR = '!عشوائي'
 let PLAY = '!play'
 let YTDL_COMMAND = '!ytdl'
@@ -93,7 +78,6 @@ let commandsList = [
 	// JADWAL,
 	STICKER,
 	S,
-	// RANDOM,
 	RANDOM_AR,
 	// PLAY,
 	// YTDL_COMMAND,
@@ -140,32 +124,34 @@ client.on('message_create', async msg => {
 	let hasMedia = msg.hasMedia
 	let hasQuotedMsg = msg.hasQuotedMsg
 	let regexRand = new RegExp(`^${RANDOM_AR}`)
-	let regexRand_en = new RegExp(`^${RANDOM}`)
 	let regexYT = new RegExp(`^${PLAY}`)
 	let regexYTDL = new RegExp(`^${YTDL_COMMAND}`)
 
+	let got_message = `${t} <GOT MESSAGE> ${msg.hasMedia ? '<HAS MEDIA>' : ''} <FROM: ${msg.fromMe ? 'ME' : msg.author}> <IN: ${msg.from}> | BODY: ${body.startsWith('!') ? msg.body : msg.body.substring(0, 16) + '...'}`
 	body.startsWith('!')
-		? log(`${t} GOT MESSAGE: ${msg.body}`.magenta)
-		: log(`${t} GOT MESSAGE: ${msg.body.substr(0, 16)}...`.yellow)
+		? log(got_message.magenta)
+		: log(got_message.yellow)
 
 	if (body == HELP || body == H) {
 		msg.reply(helpContent)
 	} else if (body == EVERYONE) {
-		// const chat = await msg.getChat()
+		const chat = await msg.getChat()
 
-		// let text = ''
-		// let mentions = []
+		let text = ''
+		let mentions = []
 
-		// for (let participant of chat.participants) {
-		// 	const contact = await client.getContactById(participant.id._serialized)
+		for (let participant of chat.participants) {
+			const contact = await client.getContactById(participant.id._serialized)
 
-		// 	mentions.push(contact)
-		// 	text += `@${participant.id.user} `
-		// }
+			mentions.push(contact)
+			text += `@${participant.id.user} `
+		}
 
-		// chat.sendMessage(text, { mentions })
-
-		msg.reply('لأ.')
+		if (msg.fromMe) {
+			chat.sendMessage(text, { mentions })
+		} else {
+			msg.reply('لأ.')
+		}
 	} else if (body == JADWAL) {
 	} else if (body == STICKER || body == S) {
 		log(`${t} !s hasMedia ?: ${hasMedia}`.magenta)
@@ -194,7 +180,11 @@ client.on('message_create', async msg => {
 
 		let item = list[rand]
 
-		msg.reply(item)
+		if (item == EVERYONE) {
+			msg.reply('لأ.')
+		} else {
+			msg.reply(item)
+		}
 	} else if (regexYT.test(body)) {
 		let q = body.split('\n').pop()
 		let query = q.replace(/\s/g, '+')
@@ -212,6 +202,23 @@ client.on('message_create', async msg => {
 		audioize(msg, './rage.mp3')
 	}
 })
+
+
+client.on("message_revoke_everyone", async (msg, rev) => {
+	const chat = await msg.getChat()
+	if (rev) {
+		const contact = await msg.getContact()
+		if (rev.hasMedia) {
+			console.log("revoked msg has media, can't handle it (yet?) :(".cyan);
+		} else {
+			console.log(`revoked msg: ${rev.body}`.cyan);
+			chat.sendMessage(`"${rev.body}"\nby @${contact.id.user}`, {mentions: [contact]})
+		}
+	} else {
+		console.log("revoked with no revoked object :(".cyan);
+	}
+})
+
 
 async function stickerize(msg, og = null) {
 	let recipient
