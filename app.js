@@ -212,7 +212,11 @@ client.on("message_revoke_everyone", async (msg, rev) => {
 			console.log("revoked msg has media, can't handle it (yet?) :(".cyan);
 		} else {
 			console.log(`revoked msg: ${rev.body}`.cyan);
-			chat.sendMessage(`"${rev.body}"\nby @${contact.id.user}`, {mentions: [contact]})
+			if (chat.participants.length <= 25) {
+				chat.sendMessage(`"${rev.body}"\nby @${contact.id.user}`, {mentions: [contact]})
+			} else {
+				console.log(`group too big, avoiding havoc.`.cyan);
+			}
 		}
 	} else {
 		console.log("revoked with no revoked object :(".cyan);
@@ -248,7 +252,7 @@ async function stickerize(msg, og = null) {
 
 		if (
 			err.message.includes(
-				"Evaluation failed: TypeError: Cannot read property 'mediaData' of undefined"
+				"Evaluation failed: TypeError:"
 			)
 		) {
 			if (og) {
