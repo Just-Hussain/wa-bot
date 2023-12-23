@@ -14,6 +14,7 @@
  * @property {Collection} commands - Commands collection attached to the whatsapp-web.js client
  */
 
+require("dotenv").config();
 const { Client, LocalAuth, Events } = require("whatsapp-web.js");
 const { Collection } = require("discord.js");
 const fs = require("node:fs");
@@ -27,13 +28,13 @@ const colors = require("colors");
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath:
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    // 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    executablePath: process.env.PUPPETEER_EXEC_PATH,
+    args:
+      process.env.MODE == "prod"
+        ? ["--no-sandbox", "--disable-setuid-sandbox"]
+        : undefined,
   },
-  // takeoverOnConflict: false,
-  // ffmpegPath: 'D:\\Program Files\\ffmpeg-N-100892-g44e27d937d-win64-gpl-shared\\ffmpeg-N-100892-g44e27d937d-win64-gpl-shared\\bin',
-  // restartOnAuthFail: false
+  ffmpegPath: process.env.FFMPEG_PATH || undefined,
 });
 
 // attach command handlers collection to the client
@@ -69,7 +70,7 @@ client.on(Events.QR_RECEIVED, (qr) => {
 });
 
 // Save session values to the file upon successful auth
-client.on(Events.AUTHENTICATED, (session) => {
+client.on(Events.AUTHENTICATED, () => {
   console.log(`Authed!`.blue);
 });
 
@@ -80,6 +81,10 @@ client.on(Events.AUTHENTICATION_FAILURE, (msg) => {
 
 client.on(Events.READY, () => {
   console.log(`Client is ready!`.blue);
+});
+
+client.on(Events.DISCONNECTED, () => {
+  console.error(`Client got disconnected :((`.red);
 });
 
 client.on(Events.MESSAGE_CREATE, async (msg) => {
@@ -99,4 +104,5 @@ client.on(Events.MESSAGE_CREATE, async (msg) => {
   }
 });
 
+console.log("Starting Da Bot...");
 client.initialize(); // RUN!

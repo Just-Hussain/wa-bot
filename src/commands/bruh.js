@@ -20,9 +20,7 @@ async function audioize(msg, audioPath) {
 }
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName("bruh")
-    .setDescription("Replies with Pong!"),
+  data: new SlashCommandBuilder().setName("bruh").setDescription("bruh..."),
 
   aliases: ["براه"],
 
