@@ -28,6 +28,10 @@ module.exports = {
    * @param {Message} msg
    */
   async execute(msg) {
-    audioize(msg, "../media/bruh.mp3");
+    try {
+      audioize(msg, "../media/bruh.mp3");
+    } catch (err) {
+      console.error(`/${this.data.name} failed`.red, err);
+    }
   },
 };

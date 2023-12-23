@@ -15,26 +15,18 @@ async function stickerize(msg, og = null) {
   og ? (recipient = og) : (recipient = msg);
 
   console.log(`Downloading...`.cyan);
-  try {
-    let media = await msg.downloadMedia();
-    console.log(`Media type: ${media.mimetype}. Sending...`.cyan);
-
-    let reply = await recipient.reply(media, recipient.from, {
-      sendMediaAsSticker: true,
-      media: true,
-    });
-    console.log(`Replied w/ Media ?: ${reply.hasMedia}`.cyan);
-  } catch (err) {
-    console.log(`${err.message}`.red);
-
-    if (err.message.includes("Evaluation failed: TypeError:")) {
-      if (og) {
-        og.reply("Can't find the media, maybe re-send it ?");
-      } else {
-        msg.reply("Can't find the media, maybe re-send it ?");
-      }
-    }
+  let media = await msg.downloadMedia();
+  if (!media) {
+    console.error(`Could not download media :(`.red);
+    recipient.reply("ما قدرت احمل اللي تبي تحوله 😔");
   }
+  console.log(`Media type: ${media.mimetype}. Sending...`.cyan);
+
+  let reply = await recipient.reply(media, recipient.from, {
+    sendMediaAsSticker: true,
+    media: true,
+  });
+  console.log(`Replied w/ Media ?: ${reply.hasMedia}`.cyan);
 }
 
 module.exports = {
@@ -47,19 +39,22 @@ module.exports = {
    * @param {Message} msg
    */
   async execute(msg) {
-    if (msg.hasMedia) {
-      stickerize(msg);
-    } else if (msg.hasQuotedMsg) {
-      try {
+    try {
+      if (msg.hasMedia) {
+        stickerize(msg);
+      } else if (msg.hasQuotedMsg) {
         let quoted = await msg.getQuotedMessage();
-
+        if (!quoted) {
+          console.error("Could not get quoted message :(");
+          msg.reply("ما قدرت اجيب الرسالة اللي ممنشنها 🚬");
+        }
         console.log(`quoted hasMedia ?: ${quoted.hasMedia}`.magenta);
         if (quoted.hasMedia) {
           stickerize(quoted, msg);
         }
-      } catch (err) {
-        console.log(`err getting quoted ` + err.message.red);
       }
+    } catch (err) {
+      console.error(`/${this.data.name} failed`.red, err);
     }
   },
 };
