@@ -1,10 +1,10 @@
 /**
- * @typedef {import('whatsapp-web.js').Message}
+ * @typedef {import('../types').Interaction} Interaction
  */
 
 const path = require("path");
 const { SlashCommandBuilder } = require("discord.js");
-const { Message, MessageMedia } = require("whatsapp-web.js");
+const { MessageMedia } = require("whatsapp-web.js");
 
 async function audioize(msg, audioPath) {
   console.log(`!s hasQuoted ?: ${msg.hasQuotedMsg}`.magenta);
@@ -25,11 +25,11 @@ module.exports = {
   aliases: ["براه"],
 
   /**
-   * @param {Message} msg
+   * @param {Interaction} interaction
    */
-  async execute(msg) {
+  async execute(interaction) {
     try {
-      audioize(msg, "../media/bruh.mp3");
+      audioize(interaction.msg, "../media/bruh.mp3");
     } catch (err) {
       console.error(`/${this.data.name} failed`.red, err);
     }

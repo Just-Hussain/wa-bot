@@ -1,9 +1,8 @@
 /**
- * @typedef {import('whatsapp-web.js').Message}
+ * @typedef {import('../types').Interaction} Interaction
  */
 
 const { SlashCommandBuilder } = require("discord.js");
-const { Message } = require("whatsapp-web.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,9 +12,9 @@ module.exports = {
   aliases: ["p"],
 
   /**
-   * @param {Message} msg
+   * @param {Interaction} interaction
    */
-  async execute(msg) {
-    await msg.reply("Pong!");
+  async execute(interaction) {
+    interaction.msg.reply("Pong!");
   },
 };

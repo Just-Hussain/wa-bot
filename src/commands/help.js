@@ -1,10 +1,8 @@
 /**
- * @typedef {import('whatsapp-web.js').Message}
- * @typedef {import('discord.js').Collection}
+ * @typedef {import('../types').Interaction} Interaction
  */
 
 const { SlashCommandBuilder } = require("discord.js");
-const { Message } = require("whatsapp-web.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -12,12 +10,11 @@ module.exports = {
     .setDescription("Lists available commands."),
 
   aliases: ["h", "شعندك"],
-
   /**
-   * @param {Message} msg
-   * @param {Collection} commands
+   * @param {Interaction} interaction
+   * @param {import("discord.js").Collection} commands
    */
-  async execute(msg, commands) {
+  async execute(interaction, commands) {
     const txt = "";
     for (const command of commands) {
       txt += `/${command.data.name} [${command.aliases.toString()}]: ${
@@ -25,6 +22,6 @@ module.exports = {
       }\n`;
     }
 
-    msg.reply(txt);
+    interaction.msg.reply(txt);
   },
 };

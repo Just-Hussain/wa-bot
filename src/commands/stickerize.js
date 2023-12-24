@@ -1,9 +1,8 @@
 /**
- * @typedef {import('whatsapp-web.js').Message}
+ * @typedef {import('../types').Interaction} Interaction
  */
 
 const { SlashCommandBuilder } = require("discord.js");
-const { Message } = require("whatsapp-web.js");
 
 /**
  * Media to stickers 👾
@@ -35,10 +34,12 @@ module.exports = {
     .setDescription("Converts media into sticker."),
 
   aliases: ["s", "ستيكر"],
+
   /**
-   * @param {Message} msg
+   * @param {Interaction} interaction
    */
-  async execute(msg) {
+  async execute(interaction) {
+    const { msg } = interaction;
     try {
       if (msg.hasMedia) {
         stickerize(msg);

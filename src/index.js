@@ -1,17 +1,8 @@
 /**
- * @typedef {import('whatsapp-web.js').Client} Client
- */
-
-/**
- * @typedef {import('discord.js').Collection} Collection
- */
-
-/**
- * @typedef {Client & { commands: Collection }} ExtendedClient
- */
-
-/**
- * @property {Collection} commands - Commands collection attached to the whatsapp-web.js client
+ * @typedef {import('./types').DB} DB
+ * @typedef {import('./types').Interaction} Interaction
+ * @typedef {import('./types').ExtendedClient} ExtendedClient
+ * @typedef {import('./types').Data} Data
  */
 
 require("dotenv").config();
@@ -36,6 +27,11 @@ const client = new Client({
   },
   ffmpegPath: process.env.FFMPEG_PATH || undefined,
 });
+
+/**
+ *@type {DB}
+ */
+let db;
 
 // attach command handlers collection to the client
 client.commands = new Collection();
@@ -75,11 +71,17 @@ client.on(Events.AUTHENTICATED, () => {
 });
 
 client.on(Events.AUTHENTICATION_FAILURE, (msg) => {
-  // Fired if session restore was unsuccessfull
+  // Fired if session restore was unsuccessful
   console.error(`AUTHENTICATION FAILURE`.red, msg);
 });
 
-client.on(Events.READY, () => {
+client.on(Events.READY, async () => {
+  const { JSONPreset } = await import("lowdb/node");
+  /**
+   * @type {Data}
+   */
+  const defaultData = { stats: {} };
+  db = await JSONPreset("db.json", defaultData);
   console.log(`Client is ready!`.blue);
 });
 
@@ -98,7 +100,10 @@ client.on(Events.MESSAGE_CREATE, async (msg) => {
   }
 
   try {
-    await command.execute(msg);
+    await command.execute({ msg, db, client });
+    db.data.stats[command.data["name"]] =
+      db.data.stats[command.data["name"]] + 1 || 1;
+    await db.write();
   } catch (error) {
     console.error(error);
   }

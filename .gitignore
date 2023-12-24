@@ -1,9 +1,8 @@
 session.json
 .wwebjs_cache
 rage.mp3
-
+db.json
 .wwebjs_auth
-
 .DS_Store
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
